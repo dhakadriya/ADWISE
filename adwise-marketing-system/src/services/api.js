@@ -1,7 +1,7 @@
 // API Service for Adwise Marketing System
 // Connects React frontend to Python FastAPI backend
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://adwise-tho4.onrender.com/api';
 
 // Helper function to get auth token from localStorage
 const getAuthToken = () => {
