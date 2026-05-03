@@ -29,7 +29,6 @@ const Layout = ({ children }) => {
 
   const navigation = [
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-    { name: 'Real-Time', href: '/realtime', icon: BarChart3, badge: 'Live' },
     { name: 'Campaigns', href: '/campaigns', icon: Megaphone },
     { name: 'Tracking Links', href: '/tracking-links', icon: Link2 },
     { name: 'Customer Journey', href: '/customer-journey', icon: Users },

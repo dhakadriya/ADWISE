@@ -10,7 +10,6 @@ import Analytics from './pages/Analytics';
 import AIRecommendations from './pages/AIRecommendations';
 import FraudDetection from './pages/FraudDetection';
 import Settings from './pages/Settings';
-import RealtimeDashboardPage from './pages/RealtimeDashboardPage';
 import Layout from './components/Layout';
 import api from './services/api';
 
@@ -35,7 +34,6 @@ function App() {
               <Layout>
                 <Routes>
                   <Route path="/dashboard" element={<Dashboard />} />
-                  <Route path="/realtime" element={<RealtimeDashboardPage />} />
                   <Route path="/campaigns" element={<Campaigns />} />
                   <Route path="/tracking-links" element={<TrackingLinks />} />
                   <Route path="/customer-journey" element={<CustomerJourney />} />

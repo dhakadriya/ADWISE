@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import Card from '../components/Card';
 import Modal from '../components/Modal';
 import { Plus, Edit2, Trash2, Play, Pause } from 'lucide-react';
 import api from '../services/api';
+import { containerVariants, itemVariants, buttonHover } from '../utils/animations';
 
 const Campaigns = () => {
   const [campaigns, setCampaigns] = useState([]);
