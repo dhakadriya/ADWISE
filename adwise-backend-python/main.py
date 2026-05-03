@@ -6,22 +6,28 @@ from typing import Optional, List
 from datetime import datetime, timedelta
 import jwt
 import hashlib
+import os
 
 # Initialize FastAPI app
-app = FastAPI(title="Adwise Marketing System API")
+app = FastAPI(
+    title="Adwise Marketing System API",
+    description="Marketing Attribution and Analytics Platform API",
+    version="1.0.0"
+)
 
-# CORS configuration - must be added FIRST before any routes
+# CORS configuration - Allow all origins for deployment
+# You can restrict this to your Netlify URL later
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allow all origins for development
+    allow_origins=["*"],  # For deployment: ["https://your-app.netlify.app"]
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
     expose_headers=["*"],
 )
 
-# Security
-SECRET_KEY = "your-secret-key-change-in-production"
+# Security - Use environment variables in production
+SECRET_KEY = os.getenv("SECRET_KEY", "your-secret-key-change-in-production")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
@@ -177,11 +183,16 @@ async def get_dashboard_metrics():
 
 @app.get("/")
 async def root():
-    return {"message": "Adwise Marketing System API", "status": "running"}
+    return {"message": "AdWise Backend Running 🚀", "status": "running", "version": "1.0.0"}
 
 @app.get("/health")
 async def health_check():
-    return {"status": "healthy"}
+    return {"status": "healthy", "message": "API is operational"}
+
+# For deployment platforms that need a simple health check
+@app.get("/api/health")
+async def api_health():
+    return {"status": "ok"}
 
 if __name__ == "__main__":
     import uvicorn
