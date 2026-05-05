@@ -1,6 +1,8 @@
-import React from 'react';
-import Card from '../components/Card';
-import { TrendingUp, TrendingDown, AlertCircle, Lightbulb, ArrowRight } from 'lucide-react';
+import { motion } from 'framer-motion';
+import GlassCard from '../components/GlassCard';
+import PremiumButton from '../components/PremiumButton';
+import { TrendingUp, TrendingDown, AlertCircle, Lightbulb, ArrowRight, Sparkles } from 'lucide-react';
+import { containerVariants, itemVariants } from '../utils/animations';
 
 const AIRecommendations = () => {
   const recommendations = [
@@ -74,88 +76,126 @@ const AIRecommendations = () => {
 
   const getColorClasses = (color) => {
     const colors = {
-      green: 'from-green-500 to-green-600 text-green-600 bg-green-50 border-green-200',
-      orange: 'from-orange-500 to-orange-600 text-orange-600 bg-orange-50 border-orange-200',
-      blue: 'from-blue-500 to-blue-600 text-blue-600 bg-blue-50 border-blue-200',
-      red: 'from-red-500 to-red-600 text-red-600 bg-red-50 border-red-200',
+      green: {
+        gradient: 'from-green-500 to-green-600',
+        text: 'text-green-600 dark:text-green-400',
+        bg: 'bg-green-50 dark:bg-green-900/30',
+        border: 'border-green-200 dark:border-green-800',
+      },
+      orange: {
+        gradient: 'from-orange-500 to-orange-600',
+        text: 'text-orange-600 dark:text-orange-400',
+        bg: 'bg-orange-50 dark:bg-orange-900/30',
+        border: 'border-orange-200 dark:border-orange-800',
+      },
+      blue: {
+        gradient: 'from-blue-500 to-blue-600',
+        text: 'text-blue-600 dark:text-blue-400',
+        bg: 'bg-blue-50 dark:bg-blue-900/30',
+        border: 'border-blue-200 dark:border-blue-800',
+      },
+      red: {
+        gradient: 'from-red-500 to-red-600',
+        text: 'text-red-600 dark:text-red-400',
+        bg: 'bg-red-50 dark:bg-red-900/30',
+        border: 'border-red-200 dark:border-red-800',
+      },
     };
     return colors[color];
   };
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">AI Recommendations</h1>
-        <p className="mt-1 text-sm text-gray-500">Data-driven insights to optimize your marketing performance</p>
-      </div>
+    <motion.div
+      initial="hidden"
+      animate="visible"
+      variants={containerVariants}
+      className="space-y-6"
+    >
+      <motion.div variants={itemVariants}>
+        <h1 className="text-3xl font-display font-bold text-gray-900 dark:text-white flex items-center">
+          <Sparkles className="h-8 w-8 mr-3 text-primary-500" />
+          AI Recommendations
+        </h1>
+        <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">Data-driven insights to optimize your marketing performance</p>
+      </motion.div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        <Card className="p-4 bg-gradient-to-br from-primary-50 to-purple-50 border-primary-200">
+      <motion.div variants={containerVariants} className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <GlassCard className="p-6 bg-gradient-to-br from-primary-50 to-purple-50 dark:from-primary-900/20 dark:to-purple-900/20 border-primary-200 dark:border-primary-800">
           <div className="text-center">
-            <p className="text-3xl font-bold text-gray-900">6</p>
-            <p className="text-sm text-gray-600 mt-1">Active Recommendations</p>
+            <p className="text-4xl font-bold text-gray-900 dark:text-white">{recommendations.length}</p>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Active Recommendations</p>
           </div>
-        </Card>
-        <Card className="p-4 bg-gradient-to-br from-green-50 to-emerald-50 border-green-200">
+        </GlassCard>
+        <GlassCard className="p-6 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border-green-200 dark:border-green-800">
           <div className="text-center">
-            <p className="text-3xl font-bold text-gray-900">$6,000</p>
-            <p className="text-sm text-gray-600 mt-1">Potential Monthly Gain</p>
+            <p className="text-4xl font-bold text-gray-900 dark:text-white">$6,000</p>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Potential Monthly Gain</p>
           </div>
-        </Card>
-        <Card className="p-4 bg-gradient-to-br from-orange-50 to-amber-50 border-orange-200">
+        </GlassCard>
+        <GlassCard className="p-6 bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-900/20 dark:to-amber-900/20 border-orange-200 dark:border-orange-800">
           <div className="text-center">
-            <p className="text-3xl font-bold text-gray-900">89%</p>
-            <p className="text-sm text-gray-600 mt-1">Avg. Confidence Score</p>
+            <p className="text-4xl font-bold text-gray-900 dark:text-white">89%</p>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Avg. Confidence Score</p>
           </div>
-        </Card>
-      </div>
+        </GlassCard>
+      </motion.div>
 
-      <div className="grid gap-6">
-        {recommendations.map((rec) => {
+      <motion.div variants={containerVariants} className="grid gap-6">
+        {recommendations.map((rec, index) => {
           const colorClasses = getColorClasses(rec.color);
-          const [gradientClass, textClass, bgClass, borderClass] = colorClasses.split(' ');
 
           return (
-            <Card key={rec.id} className={`p-6 border-l-4 ${borderClass}`} hover>
-              <div className="flex items-start">
-                <div className={`w-12 h-12 bg-gradient-to-br ${gradientClass} rounded-lg flex items-center justify-center flex-shrink-0`}>
-                  <rec.icon className="h-6 w-6 text-white" />
-                </div>
-                <div className="ml-4 flex-1">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-900">{rec.title}</h3>
-                      <p className="mt-1 text-sm text-gray-600">{rec.description}</p>
-                    </div>
-                    <span className={`ml-4 px-3 py-1 text-xs font-semibold rounded-full ${bgClass} ${textClass}`}>
-                      {rec.impact} Impact
-                    </span>
+            <motion.div
+              key={rec.id}
+              variants={itemVariants}
+              custom={index}
+              whileHover={{ y: -3 }}
+            >
+              <GlassCard className={`p-6 border-l-4 ${colorClasses.border} bg-white dark:bg-dark-800/50`}>
+                <div className="flex items-start">
+                  <div className={`w-12 h-12 bg-gradient-to-br ${colorClasses.gradient} rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg`}>
+                    <rec.icon className="h-6 w-6 text-white" />
                   </div>
-                  <div className="mt-4 flex items-center justify-between">
-                    <div className="flex items-center space-x-6">
+                  <div className="ml-4 flex-1">
+                    <div className="flex items-start justify-between">
                       <div>
-                        <p className="text-xs text-gray-500">Potential</p>
-                        <p className={`text-sm font-semibold ${textClass}`}>
-                          {rec.potentialGain || rec.potentialSaving || rec.potentialLoss}
-                        </p>
+                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{rec.title}</h3>
+                        <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">{rec.description}</p>
                       </div>
-                      <div>
-                        <p className="text-xs text-gray-500">Confidence</p>
-                        <p className="text-sm font-semibold text-gray-900">{rec.confidence}</p>
-                      </div>
+                      <span className={`ml-4 px-3 py-1 text-xs font-semibold rounded-full ${colorClasses.bg} ${colorClasses.text}`}>
+                        {rec.impact} Impact
+                      </span>
                     </div>
-                    <button className={`inline-flex items-center px-4 py-2 border border-transparent rounded-lg text-sm font-medium text-white bg-gradient-to-r ${gradientClass} hover:shadow-lg transition-all`}>
-                      Apply
-                      <ArrowRight className="ml-2 h-4 w-4" />
-                    </button>
+                    <div className="mt-4 flex items-center justify-between">
+                      <div className="flex items-center space-x-6">
+                        <div>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">Potential</p>
+                          <p className={`text-sm font-semibold ${colorClasses.text}`}>
+                            {rec.potentialGain || rec.potentialSaving || rec.potentialLoss}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">Confidence</p>
+                          <p className="text-sm font-semibold text-gray-900 dark:text-white">{rec.confidence}</p>
+                        </div>
+                      </div>
+                      <PremiumButton
+                        variant="primary"
+                        size="sm"
+                        className={`bg-gradient-to-r ${colorClasses.gradient}`}
+                      >
+                        Apply
+                        <ArrowRight className="ml-2 h-4 w-4" />
+                      </PremiumButton>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </Card>
+              </GlassCard>
+            </motion.div>
           );
         })}
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 };
 

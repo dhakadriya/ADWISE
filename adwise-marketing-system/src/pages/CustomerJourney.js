@@ -1,6 +1,7 @@
-import React from 'react';
-import Card from '../components/Card';
-import { MousePointerClick, Globe, UserPlus, ShoppingCart, CheckCircle } from 'lucide-react';
+import { motion } from 'framer-motion';
+import GlassCard from '../components/GlassCard';
+import { MousePointerClick, Globe, UserPlus, ShoppingCart, CheckCircle, ArrowRight } from 'lucide-react';
+import { containerVariants, itemVariants } from '../utils/animations';
 
 const CustomerJourney = () => {
   const journeySteps = [
@@ -18,76 +19,95 @@ const CustomerJourney = () => {
   ];
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Customer Journey</h1>
-        <p className="mt-1 text-sm text-gray-500">Visualize how customers interact with your brand</p>
-      </div>
+    <motion.div
+      initial="hidden"
+      animate="visible"
+      variants={containerVariants}
+      className="space-y-6"
+    >
+      <motion.div variants={itemVariants}>
+        <h1 className="text-3xl font-display font-bold text-gray-900 dark:text-white">Customer Journey</h1>
+        <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">Visualize how customers interact with your brand</p>
+      </motion.div>
 
-      <Card className="p-8">
-        <h3 className="text-lg font-semibold text-gray-900 mb-8">Journey Flow</h3>
-        <div className="flex items-center justify-between">
-          {journeySteps.map((step, index) => (
-            <React.Fragment key={step.id}>
-              <div className="flex flex-col items-center">
-                <div className={`w-20 h-20 bg-gradient-to-br ${step.color} rounded-full flex items-center justify-center shadow-lg mb-3`}>
-                  <step.icon className="h-10 w-10 text-white" />
+      <motion.div variants={itemVariants}>
+        <GlassCard className="p-8 bg-white dark:bg-dark-800/50">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-8">Journey Flow</h3>
+          <div className="flex items-center justify-between">
+            {journeySteps.map((step, index) => (
+              <div key={step.id} className="flex items-center flex-1">
+                <div className="flex flex-col items-center flex-1">
+                  <motion.div
+                    whileHover={{ scale: 1.1, rotate: 5 }}
+                    className={`w-20 h-20 bg-gradient-to-br ${step.color} rounded-full flex items-center justify-center shadow-lg mb-3`}
+                  >
+                    <step.icon className="h-10 w-10 text-white" />
+                  </motion.div>
+                  <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-1">{step.title}</h4>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white">{step.count.toLocaleString()}</p>
+                  {index < journeySteps.length - 1 && (
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      {Math.round((journeySteps[index + 1].count / step.count) * 100)}% conversion
+                    </p>
+                  )}
                 </div>
-                <h4 className="text-sm font-semibold text-gray-900 mb-1">{step.title}</h4>
-                <p className="text-2xl font-bold text-gray-900">{step.count.toLocaleString()}</p>
                 {index < journeySteps.length - 1 && (
-                  <p className="text-xs text-gray-500 mt-1">
-                    {Math.round((journeySteps[index + 1].count / step.count) * 100)}% conversion
-                  </p>
+                  <div className="flex-1 h-1 bg-gray-200 dark:bg-dark-700 mx-4 relative rounded-full overflow-hidden">
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{ width: `${(journeySteps[index + 1].count / step.count) * 100}%` }}
+                      transition={{ duration: 1, delay: index * 0.2 }}
+                      className="absolute top-0 left-0 h-full bg-gradient-to-r from-primary-500 to-accent-500"
+                    />
+                  </div>
                 )}
               </div>
-              {index < journeySteps.length - 1 && (
-                <div className="flex-1 h-1 bg-gradient-to-r from-gray-300 to-gray-400 mx-4 relative">
-                  <div
-                    className="absolute top-0 left-0 h-full bg-gradient-to-r from-primary-500 to-purple-600"
-                    style={{ width: `${(journeySteps[index + 1].count / step.count) * 100}%` }}
-                  />
-                </div>
-              )}
-            </React.Fragment>
-          ))}
-        </div>
-      </Card>
+            ))}
+          </div>
+        </GlassCard>
+      </motion.div>
 
-      <Card className="p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Customer Touchpoints</h3>
-        <div className="space-y-4">
-          {touchpoints.map((touchpoint) => (
-            <div key={touchpoint.id} className="border border-gray-200 rounded-lg p-4 hover:border-primary-300 transition-colors">
-              <div className="flex items-center justify-between mb-3">
-                <div>
-                  <h4 className="font-semibold text-gray-900">{touchpoint.customer}</h4>
-                  <p className="text-sm text-gray-500">Journey time: {touchpoint.time}</p>
+      <motion.div variants={itemVariants}>
+        <GlassCard className="p-6 bg-white dark:bg-dark-800/50">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Recent Customer Touchpoints</h3>
+          <div className="space-y-4">
+            {touchpoints.map((touchpoint, index) => (
+              <motion.div
+                key={touchpoint.id}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: index * 0.1 }}
+                whileHover={{ scale: 1.02 }}
+                className="border border-gray-200 dark:border-dark-700 rounded-xl p-4 hover:border-primary-300 dark:hover:border-primary-700 transition-all bg-gray-50 dark:bg-dark-900/50"
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <div>
+                    <h4 className="font-semibold text-gray-900 dark:text-white">{touchpoint.customer}</h4>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">Journey time: {touchpoint.time}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-lg font-bold text-green-600 dark:text-green-400">{touchpoint.value}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Total value</p>
+                  </div>
                 </div>
-                <div className="text-right">
-                  <p className="text-lg font-bold text-green-600">{touchpoint.value}</p>
-                  <p className="text-xs text-gray-500">Total value</p>
+                <div className="flex items-center space-x-2 overflow-x-auto pb-2">
+                  {touchpoint.journey.map((step, stepIndex) => (
+                    <div key={stepIndex} className="flex items-center flex-shrink-0">
+                      <span className="px-3 py-1 text-xs font-medium bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400 rounded-full whitespace-nowrap">
+                        {step}
+                      </span>
+                      {stepIndex < touchpoint.journey.length - 1 && (
+                        <ArrowRight className="h-4 w-4 text-gray-400 dark:text-gray-600 mx-1" />
+                      )}
+                    </div>
+                  ))}
                 </div>
-              </div>
-              <div className="flex items-center space-x-2">
-                {touchpoint.journey.map((step, index) => (
-                  <React.Fragment key={index}>
-                    <span className="px-3 py-1 text-xs font-medium bg-primary-50 text-primary-700 rounded-full">
-                      {step}
-                    </span>
-                    {index < touchpoint.journey.length - 1 && (
-                      <svg className="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                      </svg>
-                    )}
-                  </React.Fragment>
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
-      </Card>
-    </div>
+              </motion.div>
+            ))}
+          </div>
+        </GlassCard>
+      </motion.div>
+    </motion.div>
   );
 };
 
