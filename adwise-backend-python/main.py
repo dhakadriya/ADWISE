@@ -56,11 +56,12 @@ class Token(BaseModel):
 class Campaign(BaseModel):
     id: Optional[int] = None
     name: str
-    channel: str
+    channel: Optional[str] = "General"
     budget: float
     status: str
     start_date: Optional[str] = None
     end_date: Optional[str] = None
+    conversions: Optional[int] = 0
 
 class TrackingLink(BaseModel):
     id: Optional[int] = None
@@ -71,14 +72,6 @@ class TrackingLink(BaseModel):
     utm_campaign: str
     utm_term: Optional[str] = None
     utm_content: Optional[str] = None
-
-class DashboardMetrics(BaseModel):
-    total_revenue: float
-    total_conversions: int
-    avg_order_value: float
-    conversion_rate: float
-    total_clicks: int
-    total_impressions: int
 
 # ==================== Helper Functions ====================
 
@@ -167,16 +160,50 @@ async def create_tracking_link(link: TrackingLink):
 
 # ==================== Analytics Routes ====================
 
-@app.get("/api/analytics/dashboard", response_model=DashboardMetrics)
+@app.get("/api/analytics/dashboard")
 async def get_dashboard_metrics():
-    # Return mock data for now
+    # Calculate real metrics from campaigns
+    total_campaigns = len(campaigns_db)
+    total_conversions = sum(c.get('conversions', 0) for c in campaigns_db)
+    total_revenue = sum(c.get('budget', 0) for c in campaigns_db)
+    customer_acquisition_cost = total_revenue / total_conversions if total_conversions > 0 else 0
+    
+    # Group campaigns by channel for channel distribution
+    channel_stats = {}
+    for campaign in campaigns_db:
+        channel = campaign.get('channel', 'General')
+        if channel not in channel_stats:
+            channel_stats[channel] = 0
+        channel_stats[channel] += campaign.get('conversions', 0)
+    
+    # Convert to list format for frontend
+    channel_data = [
+        {"name": channel, "value": conversions}
+        for channel, conversions in channel_stats.items()
+    ]
+    
+    # Get top campaigns by conversions
+    top_campaigns = sorted(
+        campaigns_db,
+        key=lambda x: x.get('conversions', 0),
+        reverse=True
+    )[:5]
+    
+    campaign_comparison = [
+        {
+            "name": c.get('name', 'Unknown'),
+            "conversions": c.get('conversions', 0)
+        }
+        for c in top_campaigns
+    ]
+    
     return {
-        "total_revenue": 125430.50,
-        "total_conversions": 1234,
-        "avg_order_value": 101.65,
-        "conversion_rate": 3.2,
-        "total_clicks": 45678,
-        "total_impressions": 234567
+        "total_campaigns": total_campaigns,
+        "total_conversions": total_conversions,
+        "total_revenue": total_revenue,
+        "customer_acquisition_cost": round(customer_acquisition_cost, 2),
+        "channel_data": channel_data,
+        "campaign_comparison": campaign_comparison
     }
 
 # ==================== Health Check ====================

@@ -40,10 +40,11 @@ Adwise is a comprehensive marketing attribution platform that helps businesses t
 
 ### **Backend** (Python FastAPI)
 - **Framework**: FastAPI with Uvicorn
-- **Database**: In-memory (development) / PostgreSQL (production)
+- **Database**: In-memory (real-time calculated data, no static/mock data)
 - **Authentication**: JWT tokens with SHA256 hashing
 - **CORS**: Configured for cross-origin requests
 - **Deployment**: Render (https://adwise-tho4.onrender.com)
+- **Data**: All metrics calculated from real campaigns and tracking links
 
 ---
 
@@ -267,8 +268,16 @@ allow_origins=["https://your-app.netlify.app"]
 
 ### **Current Setup**
 - **Type**: In-memory storage (Python dictionaries)
-- **Persistence**: None (data lost on restart)
+- **Persistence**: None (data resets on server restart)
+- **Data**: Real-time calculated metrics from user-created campaigns
+- **Note**: All static/mock data has been removed
 - **Suitable for**: Development/Testing
+
+### **How It Works**
+- Dashboard metrics are calculated in real-time from campaigns
+- No pre-populated or dummy data
+- All charts display actual campaign data
+- Empty states shown when no data exists
 
 ### **View Database**
 ```bash

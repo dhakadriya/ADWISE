@@ -28,29 +28,21 @@ const Dashboard = () => {
     }
   };
 
-  // Mock data for charts
+  // Color palette for channel data
+  const channelColors = ['#6366f1', '#a855f7', '#ec4899', '#22c55e', '#f59e0b', '#3b82f6', '#ef4444'];
+
+  // Prepare channel data with colors
+  const channelData = dashboardData?.channel_data?.map((item, index) => ({
+    ...item,
+    color: channelColors[index % channelColors.length]
+  })) || [];
+
+  // Campaign comparison data
+  const campaignData = dashboardData?.campaign_comparison || [];
+
+  // Performance data - placeholder for now (can be enhanced with historical data)
   const performanceData = [
-    { month: 'Jan', revenue: 4000, conversions: 240 },
-    { month: 'Feb', revenue: 3000, conversions: 198 },
-    { month: 'Mar', revenue: 5000, conversions: 320 },
-    { month: 'Apr', revenue: 4500, conversions: 280 },
-    { month: 'May', revenue: 6000, conversions: 390 },
-    { month: 'Jun', revenue: 7500, conversions: 450 },
-  ];
-
-  const channelData = [
-    { name: 'Google Ads', value: 35, color: '#6366f1' },
-    { name: 'Facebook', value: 25, color: '#a855f7' },
-    { name: 'Instagram', value: 20, color: '#ec4899' },
-    { name: 'Email', value: 15, color: '#22c55e' },
-    { name: 'Organic', value: 5, color: '#f59e0b' },
-  ];
-
-  const campaignData = [
-    { name: 'Summer Sale', conversions: 450 },
-    { name: 'Product Launch', conversions: 380 },
-    { name: 'Holiday Special', conversions: 320 },
-    { name: 'Brand Awareness', conversions: 280 },
+    { month: 'Current', revenue: dashboardData?.total_revenue || 0, conversions: dashboardData?.total_conversions || 0 },
   ];
 
   if (loading) {
@@ -165,12 +157,87 @@ const Dashboard = () => {
             <motion.div variants={chartVariants}>
               <GlassCard className="p-6 bg-white dark:bg-dark-800/50">
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                  Performance Over Time
+                  Performance Overview
                 </h3>
+                {performanceData.length > 0 && performanceData[0].revenue > 0 ? (
+                  <ResponsiveContainer width="100%" height={300}>
+                    <LineChart data={performanceData}>
+                      <CartesianGrid strokeDasharray="3 3" stroke={darkMode ? '#334155' : '#f0f0f0'} />
+                      <XAxis dataKey="month" stroke={darkMode ? '#94a3b8' : '#6b7280'} />
+                      <YAxis stroke={darkMode ? '#94a3b8' : '#6b7280'} />
+                      <Tooltip 
+                        contentStyle={{ 
+                          backgroundColor: darkMode ? '#1e293b' : '#ffffff',
+                          border: darkMode ? '1px solid #334155' : '1px solid #e5e7eb',
+                          borderRadius: '8px',
+                          color: darkMode ? '#ffffff' : '#000000'
+                        }}
+                      />
+                      <Legend />
+                      <Line type="monotone" dataKey="revenue" stroke="#6366f1" strokeWidth={2} />
+                      <Line type="monotone" dataKey="conversions" stroke="#22c55e" strokeWidth={2} />
+                    </LineChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="h-[300px] flex items-center justify-center">
+                    <p className="text-gray-500 dark:text-gray-400">No performance data yet. Create campaigns to see insights.</p>
+                  </div>
+                )}
+              </GlassCard>
+            </motion.div>
+
+            <motion.div variants={chartVariants}>
+              <GlassCard className="p-6 bg-white dark:bg-dark-800/50">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                  Channel Distribution
+                </h3>
+                {channelData.length > 0 ? (
+                  <ResponsiveContainer width="100%" height={300}>
+                    <PieChart>
+                      <Pie
+                        data={channelData}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                        outerRadius={100}
+                        fill="#8884d8"
+                        dataKey="value"
+                      >
+                        {channelData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <Tooltip 
+                        contentStyle={{ 
+                          backgroundColor: darkMode ? '#1e293b' : '#ffffff',
+                          border: darkMode ? '1px solid #334155' : '1px solid #e5e7eb',
+                          borderRadius: '8px',
+                          color: darkMode ? '#ffffff' : '#000000'
+                        }}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="h-[300px] flex items-center justify-center">
+                    <p className="text-gray-500 dark:text-gray-400">No channel data yet. Create campaigns to see distribution.</p>
+                  </div>
+                )}
+              </GlassCard>
+            </motion.div>
+          </motion.div>
+
+          {/* Campaign Comparison */}
+          <motion.div variants={chartVariants}>
+            <GlassCard className="p-6 bg-white dark:bg-dark-800/50">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                Top Campaigns by Conversions
+              </h3>
+              {campaignData.length > 0 ? (
                 <ResponsiveContainer width="100%" height={300}>
-                  <LineChart data={performanceData}>
+                  <BarChart data={campaignData}>
                     <CartesianGrid strokeDasharray="3 3" stroke={darkMode ? '#334155' : '#f0f0f0'} />
-                    <XAxis dataKey="month" stroke={darkMode ? '#94a3b8' : '#6b7280'} />
+                    <XAxis dataKey="name" stroke={darkMode ? '#94a3b8' : '#6b7280'} />
                     <YAxis stroke={darkMode ? '#94a3b8' : '#6b7280'} />
                     <Tooltip 
                       contentStyle={{ 
@@ -180,71 +247,14 @@ const Dashboard = () => {
                         color: darkMode ? '#ffffff' : '#000000'
                       }}
                     />
-                    <Legend />
-                    <Line type="monotone" dataKey="revenue" stroke="#6366f1" strokeWidth={2} />
-                    <Line type="monotone" dataKey="conversions" stroke="#22c55e" strokeWidth={2} />
-                  </LineChart>
+                    <Bar dataKey="conversions" fill="#6366f1" radius={[8, 8, 0, 0]} />
+                  </BarChart>
                 </ResponsiveContainer>
-              </GlassCard>
-            </motion.div>
-
-            <motion.div variants={chartVariants}>
-              <GlassCard className="p-6 bg-white dark:bg-dark-800/50">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                  Channel Contribution
-                </h3>
-                <ResponsiveContainer width="100%" height={300}>
-                  <PieChart>
-                    <Pie
-                      data={channelData}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                      outerRadius={100}
-                      fill="#8884d8"
-                      dataKey="value"
-                    >
-                      {channelData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <Tooltip 
-                      contentStyle={{ 
-                        backgroundColor: darkMode ? '#1e293b' : '#ffffff',
-                        border: darkMode ? '1px solid #334155' : '1px solid #e5e7eb',
-                        borderRadius: '8px',
-                        color: darkMode ? '#ffffff' : '#000000'
-                      }}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
-              </GlassCard>
-            </motion.div>
-          </motion.div>
-
-          {/* Campaign Comparison */}
-          <motion.div variants={chartVariants}>
-            <GlassCard className="p-6 bg-white dark:bg-dark-800/50">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                Campaign Comparison
-              </h3>
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={campaignData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke={darkMode ? '#334155' : '#f0f0f0'} />
-                  <XAxis dataKey="name" stroke={darkMode ? '#94a3b8' : '#6b7280'} />
-                  <YAxis stroke={darkMode ? '#94a3b8' : '#6b7280'} />
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: darkMode ? '#1e293b' : '#ffffff',
-                      border: darkMode ? '1px solid #334155' : '1px solid #e5e7eb',
-                      borderRadius: '8px',
-                      color: darkMode ? '#ffffff' : '#000000'
-                    }}
-                  />
-                  <Bar dataKey="conversions" fill="#6366f1" radius={[8, 8, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
+              ) : (
+                <div className="h-[300px] flex items-center justify-center">
+                  <p className="text-gray-500 dark:text-gray-400">No campaigns yet. Create your first campaign to see comparison.</p>
+                </div>
+              )}
             </GlassCard>
           </motion.div>
         </motion.div>

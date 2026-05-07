@@ -17,6 +17,7 @@ import {
   LogOut,
   Moon,
   Sun,
+  Package,
 } from 'lucide-react';
 import api from '../services/api';
 

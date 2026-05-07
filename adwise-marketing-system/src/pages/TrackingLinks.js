@@ -1,54 +1,89 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import GlassCard from '../components/GlassCard';
 import PremiumButton from '../components/PremiumButton';
 import Modal from '../components/Modal';
 import { Plus, Copy, ExternalLink, Check, Link2, TrendingUp } from 'lucide-react';
+import api from '../services/api';
 import { containerVariants, itemVariants } from '../utils/animations';
 
 const TrackingLinks = () => {
-  const [links, setLinks] = useState([
-    { id: 1, url: 'https://example.com/?utm_source=google&utm_medium=cpc&utm_campaign=summer_sale', source: 'Google', medium: 'CPC', campaign: 'Summer Sale', clicks: 1234 },
-    { id: 2, url: 'https://example.com/?utm_source=facebook&utm_medium=social&utm_campaign=product_launch', source: 'Facebook', medium: 'Social', campaign: 'Product Launch', clicks: 892 },
-    { id: 3, url: 'https://example.com/?utm_source=email&utm_medium=newsletter&utm_campaign=holiday_special', source: 'Email', medium: 'Newsletter', campaign: 'Holiday Special', clicks: 567 },
-  ]);
-
+  const [links, setLinks] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [copiedId, setCopiedId] = useState(null);
+  const [darkMode] = useState(true);
   const [formData, setFormData] = useState({
-    baseUrl: '',
-    source: '',
-    medium: '',
-    campaign: '',
+    name: '',
+    url: '',
+    utm_source: '',
+    utm_medium: '',
+    utm_campaign: '',
+    utm_term: '',
+    utm_content: '',
   });
 
+  useEffect(() => {
+    fetchLinks();
+  }, []);
+
+  const fetchLinks = async () => {
+    try {
+      const data = await api.trackingLinks.getAll();
+      setLinks(data);
+    } catch (err) {
+      setError(err.message || 'Failed to load tracking links');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const generateUrl = () => {
-    const { baseUrl, source, medium, campaign } = formData;
-    return `${baseUrl}?utm_source=${source}&utm_medium=${medium}&utm_campaign=${campaign.replace(/\s+/g, '_').toLowerCase()}`;
+    const { url, utm_source, utm_medium, utm_campaign, utm_term, utm_content } = formData;
+    let trackingUrl = `${url}?utm_source=${utm_source}&utm_medium=${utm_medium}&utm_campaign=${utm_campaign.replace(/\s+/g, '_').toLowerCase()}`;
+    if (utm_term) trackingUrl += `&utm_term=${utm_term}`;
+    if (utm_content) trackingUrl += `&utm_content=${utm_content}`;
+    return trackingUrl;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const newLink = {
-      id: links.length + 1,
-      url: generateUrl(),
-      source: formData.source,
-      medium: formData.medium,
-      campaign: formData.campaign,
-      clicks: 0,
-    };
-    setLinks([...links, newLink]);
-    setIsModalOpen(false);
-    setFormData({ baseUrl: '', source: '', medium: '', campaign: '' });
+    try {
+      const linkData = {
+        ...formData,
+        utm_campaign: formData.utm_campaign.replace(/\s+/g, '_').toLowerCase(),
+      };
+      await api.trackingLinks.create(linkData);
+      await fetchLinks();
+      setIsModalOpen(false);
+      setFormData({ name: '', url: '', utm_source: '', utm_medium: '', utm_campaign: '', utm_term: '', utm_content: '' });
+    } catch (err) {
+      setError(err.message || 'Failed to create tracking link');
+    }
   };
 
-  const copyToClipboard = (url, id) => {
-    navigator.clipboard.writeText(url);
-    setCopiedId(id);
+  const copyToClipboard = (link) => {
+    let fullUrl = `${link.url}?utm_source=${link.utm_source}&utm_medium=${link.utm_medium}&utm_campaign=${link.utm_campaign}`;
+    if (link.utm_term) fullUrl += `&utm_term=${link.utm_term}`;
+    if (link.utm_content) fullUrl += `&utm_content=${link.utm_content}`;
+    navigator.clipboard.writeText(fullUrl);
+    setCopiedId(link.id);
     setTimeout(() => setCopiedId(null), 2000);
   };
 
-  const totalClicks = links.reduce((sum, link) => sum + link.clicks, 0);
+  if (loading) {
+    return (
+      <div className={darkMode ? 'dark' : ''}>
+        <div className="min-h-screen bg-gray-50 dark:bg-dark-950 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
+            <p className="mt-4 text-gray-600 dark:text-gray-400">Loading tracking links...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <motion.div
@@ -57,6 +92,16 @@ const TrackingLinks = () => {
       variants={containerVariants}
       className="space-y-6"
     >
+      {error && (
+        <motion.div 
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4"
+        >
+          <p className="text-red-600 dark:text-red-400">{error}</p>
+        </motion.div>
+      )}
+
       <motion.div variants={itemVariants} className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-display font-bold text-gray-900 dark:text-white">Tracking Links</h1>
@@ -73,7 +118,7 @@ const TrackingLinks = () => {
       </motion.div>
 
       {/* Stats Overview */}
-      <motion.div variants={containerVariants} className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <motion.div variants={containerVariants} className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <GlassCard className="p-6 bg-white dark:bg-dark-800/50">
           <div className="flex items-center justify-between">
             <div>
@@ -89,25 +134,13 @@ const TrackingLinks = () => {
         <GlassCard className="p-6 bg-white dark:bg-dark-800/50">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Total Clicks</p>
-              <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">{totalClicks.toLocaleString()}</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400">Active Campaigns</p>
+              <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">
+                {new Set(links.map(l => l.utm_campaign)).size}
+              </p>
             </div>
             <div className="p-3 bg-accent-500/10 rounded-xl">
               <TrendingUp className="h-8 w-8 text-accent-500" />
-            </div>
-          </div>
-        </GlassCard>
-
-        <GlassCard className="p-6 bg-white dark:bg-dark-800/50">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Avg. Clicks/Link</p>
-              <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">
-                {links.length > 0 ? Math.round(totalClicks / links.length) : 0}
-              </p>
-            </div>
-            <div className="p-3 bg-purple-500/10 rounded-xl">
-              <TrendingUp className="h-8 w-8 text-purple-500" />
             </div>
           </div>
         </GlassCard>
@@ -115,77 +148,101 @@ const TrackingLinks = () => {
 
       {/* Links Grid */}
       <motion.div variants={containerVariants} className="grid gap-4">
-        {links.map((link, index) => (
-          <motion.div
-            key={link.id}
-            variants={itemVariants}
-            custom={index}
-            whileHover={{ y: -2 }}
-          >
-            <GlassCard className="p-6 bg-white dark:bg-dark-800/50">
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center space-x-3 mb-3">
-                    <span className="px-3 py-1 text-xs font-medium bg-primary-100 dark:bg-primary-900/30 text-primary-800 dark:text-primary-400 rounded-full">
-                      {link.source}
-                    </span>
-                    <span className="px-3 py-1 text-xs font-medium bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-400 rounded-full">
-                      {link.medium}
-                    </span>
-                    <span className="px-3 py-1 text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300 rounded-full">
-                      {link.campaign}
-                    </span>
-                    <span className="ml-auto px-3 py-1 text-xs font-medium bg-accent-100 dark:bg-accent-900/30 text-accent-800 dark:text-accent-400 rounded-full">
-                      {link.clicks} clicks
-                    </span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <code className="text-sm text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-dark-700 px-3 py-2 rounded-lg flex-1 break-all">
-                      {link.url}
-                    </code>
-                  </div>
-                </div>
-                <div className="flex items-center space-x-2 ml-4">
-                  <motion.button
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.9 }}
-                    onClick={() => copyToClipboard(link.url, link.id)}
-                    className="p-2 text-gray-400 dark:text-gray-500 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded-lg transition-colors"
-                    title="Copy to clipboard"
-                  >
-                    {copiedId === link.id ? (
-                      <Check className="h-5 w-5 text-green-600 dark:text-green-400" />
-                    ) : (
-                      <Copy className="h-5 w-5" />
-                    )}
-                  </motion.button>
-                  <motion.a
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.9 }}
-                    href={link.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="p-2 text-gray-400 dark:text-gray-500 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded-lg transition-colors"
-                    title="Open link"
-                  >
-                    <ExternalLink className="h-5 w-5" />
-                  </motion.a>
-                </div>
+        {links.length === 0 ? (
+          <GlassCard className="p-12 bg-white dark:bg-dark-800/50 text-center">
+            <div className="max-w-md mx-auto">
+              <div className="w-16 h-16 bg-primary-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Link2 className="h-8 w-8 text-primary-500" />
               </div>
-            </GlassCard>
-          </motion.div>
-        ))}
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">No tracking links yet</h3>
+              <p className="text-gray-600 dark:text-gray-400 mb-6">Generate your first tracking link to start monitoring campaign performance!</p>
+              <PremiumButton onClick={() => setIsModalOpen(true)} variant="primary">
+                Generate Link
+              </PremiumButton>
+            </div>
+          </GlassCard>
+        ) : (
+          links.map((link, index) => (
+            <motion.div
+              key={link.id}
+              variants={itemVariants}
+              custom={index}
+              whileHover={{ y: -2 }}
+            >
+              <GlassCard className="p-6 bg-white dark:bg-dark-800/50">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">{link.name}</h3>
+                    <div className="flex items-center space-x-3 mb-3 flex-wrap">
+                      <span className="px-3 py-1 text-xs font-medium bg-primary-100 dark:bg-primary-900/30 text-primary-800 dark:text-primary-400 rounded-full">
+                        {link.utm_source}
+                      </span>
+                      <span className="px-3 py-1 text-xs font-medium bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-400 rounded-full">
+                        {link.utm_medium}
+                      </span>
+                      <span className="px-3 py-1 text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300 rounded-full">
+                        {link.utm_campaign}
+                      </span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <code className="text-sm text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-dark-700 px-3 py-2 rounded-lg flex-1 break-all">
+                        {link.url}?utm_source={link.utm_source}&utm_medium={link.utm_medium}&utm_campaign={link.utm_campaign}
+                      </code>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-2 ml-4">
+                    <motion.button
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                      onClick={() => copyToClipboard(link)}
+                      className="p-2 text-gray-400 dark:text-gray-500 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded-lg transition-colors"
+                      title="Copy to clipboard"
+                    >
+                      {copiedId === link.id ? (
+                        <Check className="h-5 w-5 text-green-600 dark:text-green-400" />
+                      ) : (
+                        <Copy className="h-5 w-5" />
+                      )}
+                    </motion.button>
+                    <motion.a
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                      href={`${link.url}?utm_source=${link.utm_source}&utm_medium=${link.utm_medium}&utm_campaign=${link.utm_campaign}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="p-2 text-gray-400 dark:text-gray-500 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded-lg transition-colors"
+                      title="Open link"
+                    >
+                      <ExternalLink className="h-5 w-5" />
+                    </motion.a>
+                  </div>
+                </div>
+              </GlassCard>
+            </motion.div>
+          ))
+        )}
       </motion.div>
 
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Generate Tracking Link">
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Link Name</label>
+            <input
+              type="text"
+              required
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 dark:border-dark-600 rounded-lg bg-white dark:bg-dark-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              placeholder="Summer Campaign Link"
+            />
+          </div>
+          <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Base URL</label>
             <input
               type="url"
               required
-              value={formData.baseUrl}
-              onChange={(e) => setFormData({ ...formData, baseUrl: e.target.value })}
+              value={formData.url}
+              onChange={(e) => setFormData({ ...formData, url: e.target.value })}
               className="w-full px-3 py-2 border border-gray-300 dark:border-dark-600 rounded-lg bg-white dark:bg-dark-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               placeholder="https://example.com"
             />
@@ -195,8 +252,8 @@ const TrackingLinks = () => {
             <input
               type="text"
               required
-              value={formData.source}
-              onChange={(e) => setFormData({ ...formData, source: e.target.value })}
+              value={formData.utm_source}
+              onChange={(e) => setFormData({ ...formData, utm_source: e.target.value })}
               className="w-full px-3 py-2 border border-gray-300 dark:border-dark-600 rounded-lg bg-white dark:bg-dark-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               placeholder="google, facebook, newsletter"
             />
@@ -206,8 +263,8 @@ const TrackingLinks = () => {
             <input
               type="text"
               required
-              value={formData.medium}
-              onChange={(e) => setFormData({ ...formData, medium: e.target.value })}
+              value={formData.utm_medium}
+              onChange={(e) => setFormData({ ...formData, utm_medium: e.target.value })}
               className="w-full px-3 py-2 border border-gray-300 dark:border-dark-600 rounded-lg bg-white dark:bg-dark-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               placeholder="cpc, social, email"
             />
@@ -217,13 +274,13 @@ const TrackingLinks = () => {
             <input
               type="text"
               required
-              value={formData.campaign}
-              onChange={(e) => setFormData({ ...formData, campaign: e.target.value })}
+              value={formData.utm_campaign}
+              onChange={(e) => setFormData({ ...formData, utm_campaign: e.target.value })}
               className="w-full px-3 py-2 border border-gray-300 dark:border-dark-600 rounded-lg bg-white dark:bg-dark-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               placeholder="Summer Sale"
             />
           </div>
-          {formData.baseUrl && formData.source && formData.medium && formData.campaign && (
+          {formData.url && formData.utm_source && formData.utm_medium && formData.utm_campaign && (
             <div className="bg-gray-50 dark:bg-dark-700 p-3 rounded-lg">
               <p className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Preview:</p>
               <code className="text-xs text-gray-600 dark:text-gray-400 break-all">{generateUrl()}</code>
